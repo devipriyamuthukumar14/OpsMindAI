@@ -1,0 +1,9 @@
+id,title,problem,solution,category
+1,High CPU Usage,Server CPU usage is unusually high,Identify resource-intensive processes and investigate their workload,Performance
+2,Disk Space Full,Server reports insufficient disk space,Check disk usage and remove unnecessary temporary files,Storage
+3,Network Connectivity Failure,Application cannot connect to the network,Check network connectivity and inspect relevant network configuration,Network
+4,Database Connection Error,Application fails to connect to the database,Verify database service status and check connection settings,Database
+5,Memory Exhaustion,Application reports insufficient memory,Inspect memory usage and investigate processes consuming excessive memory,Performance
+6,Permission Denied,User cannot access a required file or resource,Verify user permissions and access control settings,Access
+7,Application Crash,Application unexpectedly stops responding,Inspect application logs and identify the error preceding the crash,Application
+8,Disk Read Error,System reports disk read or storage errors,Inspect storage health and review relevant system logs,Storage
