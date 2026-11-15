@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+
+# Private database and raw/processed datasets
+data/opsmind.db
+data/logs/
+data/tickets/
+
+# Temporary files
+.ipynb_checkpoints/
+*.log
