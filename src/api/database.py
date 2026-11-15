@@ -2,10 +2,8 @@
 import sqlite3
 from pathlib import Path
 
-# Locate the project directory
+# Project and database paths
 PROJECT_PATH = Path(__file__).resolve().parents[2]
-
-# Database file location
 DATABASE_PATH = PROJECT_PATH / "data" / "opsmind.db"
 
 
@@ -13,14 +11,21 @@ def get_connection():
     """Create and return a SQLite database connection."""
 
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DATABASE_PATH)
+
+    connection = sqlite3.connect(
+        DATABASE_PATH,
+        timeout=30,
+        check_same_thread=False
+    )
+
+    connection.execute("PRAGMA busy_timeout = 30000")
     connection.row_factory = sqlite3.Row
 
     return connection
 
 
 def create_tables():
-    """Create the required database tables."""
+    """Create ticket and log history tables if they do not exist."""
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -39,12 +44,12 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS log_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT NOT NULL,
-            severity TEXT,
-            component TEXT,
-            source TEXT,
+            severity TEXT NOT NULL,
+            component TEXT NOT NULL,
+            source TEXT NOT NULL,
             prediction TEXT NOT NULL,
-            anomaly_probability REAL,
-            normal_probability REAL,
+            anomaly_probability REAL NOT NULL,
+            normal_probability REAL NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -52,11 +57,9 @@ def create_tables():
     connection.commit()
     connection.close()
 
-    print("Database tables created successfully!")
-
 
 def save_ticket(description, predicted_category, confidence):
-    """Save a ticket classification result."""
+    """Save a classified ticket to the database."""
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -65,22 +68,33 @@ def save_ticket(description, predicted_category, confidence):
         INSERT INTO ticket_history
         (description, predicted_category, confidence)
         VALUES (?, ?, ?)
-    """, (description, predicted_category, confidence))
+    """, (
+        description,
+        predicted_category,
+        confidence
+    ))
 
     connection.commit()
     connection.close()
 
 
 def save_log(log_record, result):
-    """Save a log analysis result."""
+    """Save a log analysis result to the database."""
 
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
         INSERT INTO log_history
-        (message, severity, component, source, prediction,
-         anomaly_probability, normal_probability)
+        (
+            message,
+            severity,
+            component,
+            source,
+            prediction,
+            anomaly_probability,
+            normal_probability
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         log_record["message"],
@@ -92,15 +106,19 @@ def save_log(log_record, result):
         result["normal_probability"]
     ))
 
+    connection.commit()
+    connection.close()
+
 
 def get_ticket_history(limit=20):
-    """Retrieve recent ticket classification records."""
+    """Retrieve recent ticket history."""
 
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
-        SELECT * FROM ticket_history
+        SELECT *
+        FROM ticket_history
         ORDER BY id DESC
         LIMIT ?
     """, (limit,))
@@ -113,13 +131,14 @@ def get_ticket_history(limit=20):
 
 
 def get_log_history(limit=20):
-    """Retrieve recent log analysis records."""
+    """Retrieve recent log analysis history."""
 
     connection = get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
-        SELECT * FROM log_history
+        SELECT *
+        FROM log_history
         ORDER BY id DESC
         LIMIT ?
     """, (limit,))
@@ -129,7 +148,3 @@ def get_log_history(limit=20):
     connection.close()
 
     return records
-
-
-    connection.commit()
-    connection.close()
